@@ -23,6 +23,19 @@
         return True;
     }
 
+    function Wrap_Impto4D($filepath, $template = "", $hdrrange = "") {
+        require_once dirname(__FILE__) . '/KG_ImpXLSto4D.php';
+        // $filepath = str_replace(' ', '\ ', $filepath);
+
+        if (!is_Dir(dirname($filepath))) { // if immediate directory doesnt exist, create it
+                exit('Could Access filepath : '.$filepath);
+        }
+        $ar_data = ImpXlsto4D($filepath,$template,$hdrrange);
+        echo "^^".$ar_data[0]."~~";
+        echo json_encode($ar_data[1]) ."~~";
+        echo json_encode($ar_data[2]) ."~~";
+    }
+
     function ReadDataStore ($Datapath, $types = array()) { // read and return data arrays from csv formatted file
         $handle = fopen($Datapath, "r"); // read only
         $data_ars = array();
@@ -62,6 +75,21 @@
         return $data_ars;
     }
 
+    function WriteDataStore ($Datafilepath, $Data) { // write data arrays from XLS file to text file
+        $handle = fopen($Datafilepath, 'w') or die('Cannot open file:  '.$Datafilepath);
+        $numcols = count($Data);
+        $countcols = 1;
+        foreach($Data as $col) {
+            for ($i=0; $i < count($col); $i++) {
+                fwrite($handle, $col[$i]."~|~");
+            }
+            if ($countcols<$numcols) {
+                fwrite($handle, "\n");
+            }            
+            $countcols+=1;
+        }
+    }
+
     function HandleError($errno, $errstr) {
         echo "<b>Error:</b> [$errno] $errstr<br>";
         return "<b>Error:</b> [$errno] $errstr<br>";
@@ -74,6 +102,7 @@
             $r = chr($n%26 + 0x41) . $r;
         return $r;
     }
+
     function AlphaToNum($a) {
         $l = strlen($a);
         $n = 0;
@@ -81,6 +110,7 @@
             $n = $n*26 + ord($a[$i]) - 0x40;
         return $n;
     }
+
     function NewString ($string, $x = 0 , $y = 0) { // assumes $string is always formatted properly with $strt and $end chars
         if ($x > 0) {
             $x -= 1; 
@@ -149,6 +179,12 @@
         $datetime = DateTime::createFromFormat('m/d/Y', $string);
         $xlsDate = PHPExcel_Shared_Date::PHPToExcel($datetime);
         return floor($xlsDate); // remove time
+    }
+
+    function TimeStampToDateStr($float) { //excel float -> mm/dd/yyyy string
+        $datestr = PHPExcel_Style_NumberFormat::toFormattedString($float, 'MM/DD/YYYY');
+        // $datestr = PHPExcel_Style_NumberFormat::toFormattedString($float, 'YYYY/DD/MM');
+        return ($datestr);
     }
 
     function ExplicitStr ($string) {
